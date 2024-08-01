@@ -1,50 +1,100 @@
-import requests
-import pandas as pd
+from datetime import time
+from flask import Flask, jsonify
+from faker import Faker
+import random
+import uuid  # Import the uuid module
 
-# Step 1: Fetch Data from the API
-url = 'http://localhost:5000/orders'  # Replace with the actual URL of your API
-response = requests.get(url)
+app = Flask(__name__)
+faker = Faker('en_IN')  # Use the 'en_IN' locale for Indian names and addresses
 
-# Check if the request was successful
-if response.status_code == 200:
-    data = response.json()
+# Dictionary of Indian states with a list of their corresponding cities
+state_city_map = {
+    "Andhra Pradesh": ["Vijayawada", "Visakhapatnam", "Guntur"],
+    "Telangana": ["Hyderabad", "Warangal", "Nizamabad"],
+    "Maharashtra": ["Mumbai", "Pune", "Nagpur"],
+    "Karnataka": ["Bengaluru", "Mysore", "Mangalore"],
+    "Tamil Nadu": ["Chennai", "Coimbatore", "Madurai"],
+    "Gujarat": ["Ahmedabad", "Surat", "Vadodara"],
+    "West Bengal": ["Kolkata", "Howrah", "Durgapur"],
+    "Uttar Pradesh": ["Lucknow", "Kanpur", "Varanasi"],
+    "Rajasthan": ["Jaipur", "Udaipur", "Jodhpur"],
+    "Punjab": ["Ludhiana", "Amritsar", "Jalandhar"],
+    # Add more states and cities as needed
+}
 
-    # Step 2: Extract relevant information and organize it into a list of dictionaries
-    orders_data = []
-    for order in data:
-        order_id = order['order_id']
-        customer = order['customer']
-        order_details = order['order_details']
+# Example items and categories
+menu_items = [
+    {"item_name": "Margherita Pizza", "category": "Veg", "price": 12.99},
+    {"item_name": "Garlic Bread", "category": "Veg", "price": 5.99},
+    {"item_name": "Chicken Biryani", "category": "Non-Veg", "price": 14.99},
+    {"item_name": "Mutton Biryani", "category": "Non-Veg", "price": 14.99},
+    {"item_name": "Mango Lassi", "category": "Veg", "price": 3.99},
+    {"item_name": "Veggie Burger", "category": "Veg", "price": 9.99},
+    {"item_name": "Chicken Burger", "category": "Non-Veg", "price": 9.99},
+    {"item_name": "French Fries", "category": "Veg", "price": 3.49},
+    {"item_name": "Paneer Butter Masala", "category": "Veg", "price": 13.99},
+    {"item_name": "Grilled Chicken", "category": "Non-Veg", "price": 15.49},
+    {"item_name": "Caesar Salad", "category": "Veg", "price": 7.99},
+    {"item_name": "Spaghetti Bolognese", "category": "Non-Veg", "price": 11.99},
+    # Beverages category
+    {"item_name": "Coca-Cola", "category": "Beverages", "price": 1.99},
+    {"item_name": "Pepsi", "category": "Beverages", "price": 1.99},
+    {"item_name": "Fresh Lime Soda", "category": "Beverages", "price": 2.49},
+    {"item_name": "Masala Chai", "category": "Beverages", "price": 1.49},
+    {"item_name": "Cold Coffee", "category": "Beverages", "price": 2.99}
+]
 
-        # Flatten the structure into a single dictionary
-        for item in order_details['items']:
-            orders_data.append({
-                'order_id': order_id,
-                'customer_full_name': customer['full_name'],
-                'customer_mobile_no': customer['mobile_no'],
-                'customer_city': customer['city'],
-                'customer_state': customer['state'],
-                'customer_address': customer['address'],
-                'customer_email': customer['email'],
-                'item_name': item['item_name'],
-                'category': item['category'],
-                'quantity': item['quantity'],
-                'price': item['price'],
-                'total_price': order_details['total_price'],
-                'mode_of_payment': order_details['mode_of_payment'],
-                'purchase_time': order_details['purchase_time'],
-                'day_part': order_details['day_part'],
-            })
+def generate_order():
+    num_items = random.randint(1, 4)
+    selected_items = random.sample(menu_items, num_items)
+    items = []
+    total_price = 0.0
 
-    # Step 3: Create a DataFrame from the extracted data
-    df = pd.DataFrame(orders_data)
+    for item in selected_items:
+        quantity = random.randint(1, 3)
+        price = item["price"] * quantity
+        total_price += price
+        items.append({
+            "item_name": item["item_name"],
+            "category": item["category"],
+            "quantity": quantity,
+            "price": round(price, 2)
+        })
 
-    # Step 4: Data Cleaning (if necessary)
-    # Convert 'purchase_time' to datetime format
-    df['purchase_time'] = pd.to_datetime(df['purchase_time'])
+    # Select a random state and a corresponding city
+    state = random.choice(list(state_city_map.keys()))
+    city = random.choice(state_city_map[state])
 
-    # Display the DataFrame
-    print(df)
+    return {
+        "order_id": str(uuid.uuid4()),  # Generate a unique UUID for the order
+        "customer": {
+            "full_name": faker.name(),
+            "mobile_no": faker.phone_number(),
+            "city": city,
+            "state": state,
+            "address": faker.street_address(),
+            "email": faker.email()
+        },
+        "order_details": {
+            "items": items,
+            "total_price": round(total_price, 2),
+            "mode_of_payment": random.choice(["Credit Card", "Cash", "Debit Card"]),
+            "purchase_time": faker.date_time_this_year().isoformat(),
+            "day_part": random.choice(["Morning", "Afternoon", "Evening"]),
+            "special_instructions": faker.sentence()
+        }
+    }
 
-else:
-    print(f"Failed to retrieve data: {response.status_code}")
+
+def send_data(data):
+    return
+
+@app.route('/orders', methods=['GET'])
+def get_orders():
+    while True:
+        orders = [generate_order() for _ in range(10)]
+        time.sleep(5)
+        send_data(jsonify(orders))
+
+if __name__ == '__main__':
+    app.run(debug=True)
