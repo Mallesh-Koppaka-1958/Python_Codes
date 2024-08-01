@@ -24,29 +24,36 @@ state_city_map = {
 
 # Example items and categories
 menu_items = [
-    {"item_name": "Margherita Pizza", "category": "Veg", "price": 12.99},
-    {"item_name": "Garlic Bread", "category": "Veg", "price": 5.99},
-    {"item_name": "Chicken Biryani", "category": "Non-Veg", "price": 14.99},
-    {"item_name": "Mutton Biryani", "category": "Non-Veg", "price": 14.99},
-    {"item_name": "Mango Lassi", "category": "Veg", "price": 3.99},
-    {"item_name": "Veggie Burger", "category": "Veg", "price": 9.99},
-    {"item_name": "Chicken Burger", "category": "Non-Veg", "price": 9.99},
-    {"item_name": "French Fries", "category": "Veg", "price": 3.49},
-    {"item_name": "Paneer Butter Masala", "category": "Veg", "price": 13.99},
-    {"item_name": "Grilled Chicken", "category": "Non-Veg", "price": 15.49},
-    {"item_name": "Caesar Salad", "category": "Veg", "price": 7.99},
-    {"item_name": "Spaghetti Bolognese", "category": "Non-Veg", "price": 11.99},
+    {"item_name": "Margherita Pizza", "category": "Veg", "price": 399},
+    {"item_name": "Garlic Bread", "category": "Veg", "price": 99},
+    {"item_name": "Chicken Biryani", "category": "Non-Veg", "price": 599},
+    {"item_name": "Mutton Biryani", "category": "Non-Veg", "price": 799},
+    {"item_name": "Veggie Burger", "category": "Veg", "price": 179},
+    {"item_name": "Chicken Burger", "category": "Non-Veg", "price": 249},
+    {"item_name": "French Fries", "category": "Veg", "price": 209},
+    {"item_name": "Paneer Butter Masala", "category": "Veg", "price": 199},
+    {"item_name": "Grilled Chicken", "category": "Non-Veg", "price": 349},
+    {"item_name": "Caesar Salad", "category": "Veg", "price": 179},
+    {"item_name": "Spaghetti Bolognese", "category": "Non-Veg", "price": 299},
     # Beverages category
-    {"item_name": "Coca-Cola", "category": "Beverages", "price": 1.99},
-    {"item_name": "Pepsi", "category": "Beverages", "price": 1.99},
-    {"item_name": "Fresh Lime Soda", "category": "Beverages", "price": 2.49},
-    {"item_name": "Masala Chai", "category": "Beverages", "price": 1.49},
-    {"item_name": "Cold Coffee", "category": "Beverages", "price": 2.99}
+    {"item_name": "Mango Lassi", "category": "Beverages", "price": 99},
+    {"item_name": "Coca-Cola", "category": "Beverages", "price": 49},
+    {"item_name": "Pepsi", "category": "Beverages", "price": 49},
+    {"item_name": "Fresh Lime Soda", "category": "Beverages", "price": 29},
+    {"item_name": "Masala Chai", "category": "Beverages", "price": 19},
+    {"item_name": "Cold Coffee", "category": "Beverages", "price": 29}
 ]
 
 def generate_order():
     num_items = random.randint(1, 4)
-    selected_items = random.sample(menu_items, num_items)
+
+    # Ensure one beverage is always included
+    beverages = [item for item in menu_items if item["category"] == "Beverages"]
+    non_beverages = [item for item in menu_items if item["category"] != "Beverages"]
+
+    selected_items = random.sample(non_beverages, min(num_items - 1, len(non_beverages)))
+    selected_items.append(random.choice(beverages))  # Add a beverage
+
     items = []
     total_price = 0.0
 
@@ -91,10 +98,8 @@ def send_data(data):
 
 @app.route('/orders', methods=['GET'])
 def get_orders():
-    while True:
-        orders = [generate_order() for _ in range(10)]
-        time.sleep(5)
-        send_data(jsonify(orders))
+    orders = [generate_order() for _ in range(10)]
+    return jsonify(orders)
 
 if __name__ == '__main__':
     app.run(debug=True)
