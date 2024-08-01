@@ -2,7 +2,7 @@ import requests
 import pandas as pd
 
 # Step 1: Fetch Data from the API
-url = 'http://localhost:5000/orders'  # Replace with the actual URL of your API
+url = 'https://dilkhush-api.onrender.com/orders'  # Replace with the actual URL of your API
 response = requests.get(url)
 
 # Check if the request was successful
